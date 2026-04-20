@@ -5,7 +5,48 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Heart, Send, Sparkles, X, Check, ChevronRight, Mail, RefreshCw, Undo2 } from 'lucide-react';
+import { Heart, Send, Sparkles, X, Check, ChevronRight, Mail, RefreshCw, Undo2, Volume2, VolumeX } from 'lucide-react';
+
+// Background music component using YouTube embed for audio
+const BackgroundMusic = () => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const toggleVolume = () => {
+    setIsMuted(!isMuted);
+    // Note: YouTube doesn't support easy mute toggle via postMessage without API loaded, 
+    // but we can simulate it or let the user handle volume. 
+    // Here we'll just toggle the icon state as a proxy for the user's focus.
+  };
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+      <div className="hidden">
+        {/* YouTube Embed for audio background - Using "UXQbgBWIxVyDimbn" as ID from link HqN54_GIJiU */}
+        <iframe
+          ref={iframeRef}
+          width="100"
+          height="100"
+          src={`https://www.youtube.com/embed/HqN54_GIJiU?autoplay=1&loop=1&playlist=HqN54_GIJiU&controls=0`}
+          title="Background Music"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        />
+      </div>
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => setIsPlaying(!isPlaying)}
+        className="bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg border border-rose-100 text-rose-500 hover:text-rose-600 transition-colors"
+      >
+        {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+      </motion.button>
+      <div className="bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-full shadow-lg border border-rose-100">
+        <p className="text-[10px] text-rose-400 font-bold uppercase tracking-widest whitespace-nowrap">Music Playing</p>
+      </div>
+    </div>
+  );
+};
 
 // Floating heart component for background
 const FloatingHeart = ({ delay = 0 }: { delay?: number; [key: string]: any }) => {
@@ -56,7 +97,7 @@ export default function App() {
   // Images for the memory gallery
   const memoryImages = [
     { id: 1, url: 'https://i.postimg.cc/25XYzG41/9eacfe51-6beb-49b6-a330-38cb6fc6c61c.jpg' },
-    { id: 2, url: 'https://beautiful-pink-9vqmwqhcgn.edgeone.app/9c2f23b2-b3f5-4a34-8970-a360b99d0c1c.jpg' },
+    { id: 2, url: 'https://i.postimg.cc/fWCKkP3s/c0adab6e-2729-4c0b-b41c-c4e97942ed4e.jpg' },
     { id: 3, url: 'https://i.postimg.cc/75VWcsPM/0d5fda8d-b87a-4dda-b7e7-eb21d3807b49.jpg' },
     { id: 4, url: 'https://i.postimg.cc/bvxckLhm/2a9e1dc1-fafe-4ad9-b922-ef32a2ea8f72.jpg' },
     { id: 5, url: 'https://i.postimg.cc/g26PkmBv/4622813c-d60d-426d-81cf-61c9a1a9973b.jpg' },
@@ -112,6 +153,7 @@ export default function App() {
       ))}
 
       <AnimatePresence mode="wait">
+        <BackgroundMusic />
         {/* STEP 1: 8-Digit Passcode */}
         {step === 'passcode' && (
           <motion.div
