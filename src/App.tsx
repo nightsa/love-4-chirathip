@@ -55,7 +55,7 @@ export default function App() {
 
   // Images for the memory gallery
   const memoryImages = [
-    { id: 1, url: 'https://expected-bronze-rkrmff8pdi.edgeone.app/454f5aaa-fe1c-4ce5-b252-f98f7060e49b.jpg' },
+    { id: 1, url: 'https://i.postimg.cc/25XYzG41/9eacfe51-6beb-49b6-a330-38cb6fc6c61c.jpg' },
     { id: 2, url: 'https://beautiful-pink-9vqmwqhcgn.edgeone.app/9c2f23b2-b3f5-4a34-8970-a360b99d0c1c.jpg' },
     { id: 3, url: 'https://i.postimg.cc/75VWcsPM/0d5fda8d-b87a-4dda-b7e7-eb21d3807b49.jpg' },
     { id: 4, url: 'https://i.postimg.cc/bvxckLhm/2a9e1dc1-fafe-4ad9-b922-ef32a2ea8f72.jpg' },
