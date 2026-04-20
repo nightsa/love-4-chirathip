@@ -7,59 +7,59 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Send, Sparkles, X, Check, ChevronRight, Mail, RefreshCw, Undo2, Volume2, VolumeX } from 'lucide-react';
 
-// Background music component - Plays automatically on first interaction
+// Background music component - Plays as soon as possible (interaction usually required by browsers)
 const BackgroundMusic = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [status, setStatus] = useState<string>('');
-  const [hasError, setHasError] = useState(false);
+  const playInitiated = useRef(false);
 
   useEffect(() => {
+    // Attach to window so we can trigger from other components
+    if (audioRef.current) {
+      (window as any).bgMusic = audioRef.current;
+    }
+
     const startMusic = () => {
-      if (audioRef.current) {
-        setHasError(false);
-        audioRef.current.load();
-        
-        const playPromise = audioRef.current.play();
-        
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            setStatus('Playing');
+      if (playInitiated.current) return;
+      
+      const audio = (window as any).bgMusic || audioRef.current;
+      if (audio) {
+        playInitiated.current = true;
+        audio.play()
+          .then(() => {
             window.removeEventListener('click', startMusic);
             window.removeEventListener('touchstart', startMusic);
-          }).catch((err) => {
-            console.error("Playback failed:", err);
-            // Autoplay might be blocked until interaction
+            window.removeEventListener('scroll', startMusic);
+          })
+          .catch(() => {
+            playInitiated.current = false;
           });
-        }
       }
     };
 
+    // Try to play immediately (might work in some environments)
+    startMusic();
+
+    // Listen to any form of interaction to unlock audio
     window.addEventListener('click', startMusic);
     window.addEventListener('touchstart', startMusic);
+    window.addEventListener('scroll', startMusic);
 
     return () => {
       window.removeEventListener('click', startMusic);
       window.removeEventListener('touchstart', startMusic);
+      window.removeEventListener('scroll', startMusic);
     };
   }, []);
 
-  const handleAudioError = () => {
-    console.error("Audio failed to load from source.");
-    setHasError(true);
-  };
-
   return (
-    <>
-      <audio
-        ref={audioRef}
-        loop
-        preload="auto"
-        crossOrigin="anonymous"
-        onError={handleAudioError}
-      >
-        <source src="https://www.dropbox.com/scl/fi/7x0tpl2jyqob5xvwwjc1l/Therapist-Remix.mp3?rlkey=o35l89jnajxvti4r4uq7jdi9m&st=zzbpe0wr&raw=1" type="audio/mpeg" />
-      </audio>
-    </>
+    <audio
+      ref={audioRef}
+      src="https://dl.dropboxusercontent.com/scl/fi/7x0tpl2jyqob5xvwwjc1l/Therapist-Remix.mp3?rlkey=o35l89jnajxvti4r4uq7jdi9m&raw=1"
+      loop
+      autoPlay
+      playsInline
+      preload="auto"
+    />
   );
 };
 
@@ -127,6 +127,11 @@ export default function App() {
   }));
 
   const handleKeyPress = (num: string) => {
+    // Force play music on any key press if not already playing
+    if ((window as any).bgMusic && (window as any).bgMusic.paused) {
+      (window as any).bgMusic.play().catch(() => {});
+    }
+    
     if (passcode.length < 8) {
       const newPasscode = passcode + num;
       setPasscode(newPasscode);
