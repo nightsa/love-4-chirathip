@@ -7,76 +7,39 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Send, Sparkles, X, Check, ChevronRight, Mail, RefreshCw, Undo2, Volume2, VolumeX } from 'lucide-react';
 
-// Background music component using HTML5 Audio with working controls
+// Background music component - Plays automatically on first interaction
 const BackgroundMusic = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const toggleMusic = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        // We use a promise to handle browsers that block autoplay
-        audioRef.current.play()
-          .then(() => setIsPlaying(true))
-          .catch(err => {
-            console.error("Playback failed:", err);
-            // If failed, we keep isPlaying false
-          });
+  useEffect(() => {
+    const startMusic = () => {
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().then(() => {
+          // Successfully playing, remove listeners
+          window.removeEventListener('click', startMusic);
+          window.removeEventListener('touchstart', startMusic);
+        }).catch(() => {
+          // Autoplay likely blocked, will try again on next click
+        });
       }
-    }
-  };
+    };
+
+    window.addEventListener('click', startMusic);
+    window.addEventListener('touchstart', startMusic);
+
+    return () => {
+      window.removeEventListener('click', startMusic);
+      window.removeEventListener('touchstart', startMusic);
+    };
+  }, []);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
-      <audio
-        ref={audioRef}
-        src="https://jumpshare.com/v/MakAmiCVbQf3d92OAkVV?download=1" 
-        loop
-        preload="auto"
-      />
-      
-      <motion.div 
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="flex items-center gap-3"
-      >
-        <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg border border-rose-100 flex items-center gap-3">
-          <div className="flex flex-col">
-            <span className="text-[10px] text-rose-300 font-black uppercase tracking-tighter">Background Music</span>
-            <span className="text-xs font-bold text-rose-500 truncate max-w-[100px]">
-              {isPlaying ? "ขอวอน 2 - Playing" : "Music Paused"}
-            </span>
-          </div>
-          
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={toggleMusic}
-            className={`p-2.5 rounded-xl shadow-md transition-all ${
-              isPlaying 
-                ? 'bg-rose-500 text-white shadow-rose-200' 
-                : 'bg-rose-50 text-rose-500 border border-rose-100'
-            }`}
-          >
-            {isPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
-          </motion.button>
-        </div>
-      </motion.div>
-      
-      {!isPlaying && (
-        <motion.p 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 1, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="text-[9px] text-rose-400 font-medium mr-2"
-        >
-          Click to play song 🎵
-        </motion.p>
-      )}
-    </div>
+    <audio
+      ref={audioRef}
+      src="https://docs.google.com/uc?export=download&id=1q_3jsj6egBg0NkcNURTs1cChl-UQdoC6" 
+      loop
+      preload="auto"
+    />
   );
 };
 
