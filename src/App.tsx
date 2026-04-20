@@ -7,43 +7,75 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Send, Sparkles, X, Check, ChevronRight, Mail, RefreshCw, Undo2, Volume2, VolumeX } from 'lucide-react';
 
-// Background music component using YouTube embed for audio
+// Background music component using HTML5 Audio with working controls
 const BackgroundMusic = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
-  const toggleVolume = () => {
-    setIsMuted(!isMuted);
-    // Note: YouTube doesn't support easy mute toggle via postMessage without API loaded, 
-    // but we can simulate it or let the user handle volume. 
-    // Here we'll just toggle the icon state as a proxy for the user's focus.
+  const toggleMusic = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        // We use a promise to handle browsers that block autoplay
+        audioRef.current.play()
+          .then(() => setIsPlaying(true))
+          .catch(err => {
+            console.error("Playback failed:", err);
+            // If failed, we keep isPlaying false
+          });
+      }
+    }
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
-      <div className="hidden">
-        {/* YouTube Embed for audio background - Using "UXQbgBWIxVyDimbn" as ID from link HqN54_GIJiU */}
-        <iframe
-          ref={iframeRef}
-          width="100"
-          height="100"
-          src={`https://www.youtube.com/embed/HqN54_GIJiU?autoplay=1&loop=1&playlist=HqN54_GIJiU&controls=0`}
-          title="Background Music"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        />
-      </div>
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsPlaying(!isPlaying)}
-        className="bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg border border-rose-100 text-rose-500 hover:text-rose-600 transition-colors"
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+      <audio
+        ref={audioRef}
+        src="https://jumpshare.com/v/MakAmiCVbQf3d92OAkVV?download=1" 
+        loop
+        preload="auto"
+      />
+      
+      <motion.div 
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="flex items-center gap-3"
       >
-        {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-      </motion.button>
-      <div className="bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-full shadow-lg border border-rose-100">
-        <p className="text-[10px] text-rose-400 font-bold uppercase tracking-widest whitespace-nowrap">Music Playing</p>
-      </div>
+        <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg border border-rose-100 flex items-center gap-3">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-rose-300 font-black uppercase tracking-tighter">Background Music</span>
+            <span className="text-xs font-bold text-rose-500 truncate max-w-[100px]">
+              {isPlaying ? "ขอวอน 2 - Playing" : "Music Paused"}
+            </span>
+          </div>
+          
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={toggleMusic}
+            className={`p-2.5 rounded-xl shadow-md transition-all ${
+              isPlaying 
+                ? 'bg-rose-500 text-white shadow-rose-200' 
+                : 'bg-rose-50 text-rose-500 border border-rose-100'
+            }`}
+          >
+            {isPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          </motion.button>
+        </div>
+      </motion.div>
+      
+      {!isPlaying && (
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="text-[9px] text-rose-400 font-medium mr-2"
+        >
+          Click to play song 🎵
+        </motion.p>
+      )}
     </div>
   );
 };
@@ -146,6 +178,7 @@ export default function App() {
       className="fixed inset-0 bg-[#FFF5F7] overflow-hidden flex flex-col items-center justify-center font-sans selection:bg-rose-200"
       ref={containerRef}
     >
+      <BackgroundMusic />
       {/* Dynamic Background */}
       <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(255,255,255,1)_0%,_rgba(255,182,193,0.15)_100%)] pointer-events-none" />
       {[...Array(15)].map((_, i) => (
@@ -153,7 +186,6 @@ export default function App() {
       ))}
 
       <AnimatePresence mode="wait">
-        <BackgroundMusic />
         {/* STEP 1: 8-Digit Passcode */}
         {step === 'passcode' && (
           <motion.div
