@@ -10,17 +10,27 @@ import { Heart, Send, Sparkles, X, Check, ChevronRight, Mail, RefreshCw, Undo2, 
 // Background music component - Plays automatically on first interaction
 const BackgroundMusic = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [status, setStatus] = useState<string>('');
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const startMusic = () => {
-      if (audioRef.current && audioRef.current.paused) {
-        audioRef.current.play().then(() => {
-          // Successfully playing, remove listeners
-          window.removeEventListener('click', startMusic);
-          window.removeEventListener('touchstart', startMusic);
-        }).catch(() => {
-          // Autoplay likely blocked, will try again on next click
-        });
+      if (audioRef.current) {
+        setHasError(false);
+        audioRef.current.load();
+        
+        const playPromise = audioRef.current.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            setStatus('Playing');
+            window.removeEventListener('click', startMusic);
+            window.removeEventListener('touchstart', startMusic);
+          }).catch((err) => {
+            console.error("Playback failed:", err);
+            // Autoplay might be blocked until interaction
+          });
+        }
       }
     };
 
@@ -33,13 +43,23 @@ const BackgroundMusic = () => {
     };
   }, []);
 
+  const handleAudioError = () => {
+    console.error("Audio failed to load from source.");
+    setHasError(true);
+  };
+
   return (
-    <audio
-      ref={audioRef}
-      src="https://docs.google.com/uc?export=download&id=1q_3jsj6egBg0NkcNURTs1cChl-UQdoC6" 
-      loop
-      preload="auto"
-    />
+    <>
+      <audio
+        ref={audioRef}
+        loop
+        preload="auto"
+        crossOrigin="anonymous"
+        onError={handleAudioError}
+      >
+        <source src="https://www.dropbox.com/scl/fi/7x0tpl2jyqob5xvwwjc1l/Therapist-Remix.mp3?rlkey=o35l89jnajxvti4r4uq7jdi9m&st=zzbpe0wr&raw=1" type="audio/mpeg" />
+      </audio>
+    </>
   );
 };
 
